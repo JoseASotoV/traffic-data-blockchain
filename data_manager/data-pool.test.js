@@ -33,6 +33,15 @@ describe("DataPool", () => {
     });
   });
 
+  describe("getValidData", () => {
+    it("returns valid data from the pool", () => {
+      dataPool.setSegmentStatus(segmentStatus);
+      validData = dataPool.getValidData();
+
+      expect(validData.includes(segmentStatus)).toBe(true);
+    });
+  });
+
   describe("clear()", () => {
     it("clears the segmentStatusMap", () => {
       dataPool.clear();

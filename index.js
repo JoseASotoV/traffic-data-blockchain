@@ -3,11 +3,13 @@ const express = require("express");
 const Blockchain = require("./platform/blockchain");
 const DataManager = require("./data_manager");
 const DataPool = require("./data_manager/data-pool");
+const DataMiner = require("./app/data-miner");
 
 const app = express();
 const blockchain = new Blockchain();
 const dataManager = new DataManager();
 const dataPool = new DataPool();
+const dataMiner = new DataMiner({ blockchain, dataPool, dataManager });
 
 const DEFAULT_PORT = 3000;
 
@@ -23,6 +25,12 @@ app.post("/api/mine", (req, res) => {
   blockchain.addBlock({ data });
 
   //pubsub.broadcastChain();
+
+  res.redirect("/api/blocks");
+});
+
+app.get("/api/mine-data", (req, res) => {
+  dataMiner.mineData();
 
   res.redirect("/api/blocks");
 });

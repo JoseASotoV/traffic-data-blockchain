@@ -15,6 +15,14 @@ class DataPool {
     );
   }
 
+  getValidData() {
+    //TODO: only return the data that is actually valid
+    return Object.values(this.segmentStatusMap);
+    //return Object.values(this.transactionMap).filter(transaction =>
+    //  Transaction.validTransaction(transaction)
+    //);
+  }
+
   clear() {
     this.segmentStatusMap = {};
   }
