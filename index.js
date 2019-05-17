@@ -18,8 +18,6 @@ const pubsub = new PubSub({ blockchain, dataPool });
 const DEFAULT_PORT = 3001;
 const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
 
-setTimeout(() => pubsub.broadcastChain(), 1000);
-
 app.use(bodyParser.json());
 
 app.get("/api/blocks", (req, res) => {
@@ -134,7 +132,10 @@ function listen() {
     .listen(PORT, () => {
       console.log(`App listening at port ${PORT}`);
       dataManager.segmentId = `Street${PORT - 3000}`;
-      syncChains();
+
+      if (PORT != DEFAULT_PORT) {
+        syncChains();
+      }
     })
     .on("error", err => {
       if (err.errno === "EADDRINUSE") {
