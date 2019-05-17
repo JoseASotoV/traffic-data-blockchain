@@ -1,17 +1,24 @@
 const bodyParser = require("body-parser");
 const express = require("express");
+const request = require("request");
 const Blockchain = require("./platform/blockchain");
 const DataManager = require("./data_manager");
 const DataPool = require("./data_manager/data-pool");
 const DataMiner = require("./app/data-miner");
+const PubSub = require("./pubsub");
+const SegmentStatus = require("./data_manager/segment-status");
 
 const app = express();
 const blockchain = new Blockchain();
 const dataManager = new DataManager();
 const dataPool = new DataPool();
 const dataMiner = new DataMiner({ blockchain, dataPool, dataManager });
+const pubsub = new PubSub({ blockchain, dataPool });
 
-const DEFAULT_PORT = 3000;
+const DEFAULT_PORT = 3001;
+const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
+
+setTimeout(() => pubsub.broadcastChain(), 1000);
 
 app.use(bodyParser.json());
 
@@ -19,18 +26,26 @@ app.get("/api/blocks", (req, res) => {
   res.json(blockchain.chain);
 });
 
+app.get("/api/last-block", (req, res) => {
+  res.json(blockchain.getLastBlock());
+});
+
 app.post("/api/mine", (req, res) => {
-  const { data } = req.body;
+  //const { data } = req.body;
+
+  const data = dataPool.getValidData();
 
   blockchain.addBlock({ data });
 
-  //pubsub.broadcastChain();
+  pubsub.broadcastChain();
 
   res.redirect("/api/blocks");
 });
 
 app.get("/api/mine-data", (req, res) => {
   dataMiner.mineData();
+
+  pubsub.broadcastChain();
 
   res.redirect("/api/blocks");
 });
@@ -40,23 +55,21 @@ app.get("/api/data-pool-map", (req, res) => {
 });
 
 app.post("/api/create-segment-status", (req, res) => {
-  const { segmentTraffic } = req.body;
-
   let segmentStatus = dataPool.existingSegmentStatus({
     segmentAddress: dataManager.publicKey
   });
 
   try {
-    //TODO: code what happens if the segment already exists (update)
-    //if (segmentStatus) {
-    //  segmentStatus.update({ senderWallet: wallet, recipient, amount });
-    //} else {
-    //TODO: for now segmentTraffic is hardcoded, but this data needs to be provided by the actual vehicles
-    //connected to the segment
-    segmentStatus = dataManager.createSegmentStatus({
-      segmentTraffic: { V1: 10, V2: 20 }
-    });
-    //}
+    if (segmentStatus) {
+      console.log("updating segment status");
+      segmentStatus = SegmentStatus.update({
+        senderDataManager: dataManager,
+        segmentStatus
+      });
+    } else {
+      console.log("creating segment status");
+      segmentStatus = dataManager.createSegmentStatus();
+    }
   } catch (error) {
     return res.status(400).json({ type: "error", message: error.message });
   }
@@ -75,11 +88,62 @@ app.get("/api/data-manager-info", (req, res) => {
   });
 });
 
-const PORT = DEFAULT_PORT;
-app.listen(PORT, () => {
-  console.log(`App listening at port ${PORT}`);
+app.post("/api/set-vehicle-conditions", (req, res) => {
+  const { address, averageSpeed } = req.body;
 
-  if (PORT !== DEFAULT_PORT) {
-    syncChains();
+  try {
+    dataManager.segmentTraffic.setVehicleConditions({ address, averageSpeed });
+    segmentTraffic = dataManager.segmentTraffic;
+  } catch (error) {
+    return res.status(400).json({ type: "error", message: error.message });
   }
+
+  res.status(200).json({ type: "success" });
 });
+
+app.post("/api/disconnect-vehicle", (req, res) => {
+  const { address } = req.body;
+
+  try {
+    dataManager.segmentTraffic.disconnectVehicle({ address });
+    segmentTraffic = dataManager.segmentTraffic;
+  } catch (error) {
+    return res.status(400).json({ type: "error", message: error.message });
+  }
+
+  res.status(200).json({ type: "success", segmentTraffic });
+});
+
+const syncChains = () => {
+  request(
+    { url: `${ROOT_NODE_ADDRESS}/api/blocks` },
+    (error, response, body) => {
+      if (!error && response.statusCode === 200) {
+        const rootChain = JSON.parse(body);
+        console.log("replace chain on a sync with", rootChain);
+        blockchain.replaceChain(rootChain);
+      }
+    }
+  );
+};
+
+let PORT = DEFAULT_PORT;
+
+function listen() {
+  app
+    .listen(PORT, () => {
+      console.log(`App listening at port ${PORT}`);
+      dataManager.segmentId = `Street${PORT - 3000}`;
+      syncChains();
+    })
+    .on("error", err => {
+      if (err.errno === "EADDRINUSE") {
+        PORT++;
+        listen();
+      } else {
+        console.log(err);
+      }
+    });
+}
+
+listen();

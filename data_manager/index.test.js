@@ -1,5 +1,6 @@
 const DataManager = require("./index");
 const SegmentStatus = require("./segment-status");
+const SegmentTraffic = require("./segment-traffic");
 const { verifySignature } = require("../util");
 
 describe("DataManager", () => {
@@ -39,8 +40,10 @@ describe("DataManager", () => {
 
   describe("createSegmentStatus()", () => {
     beforeEach(() => {
-      segmentTraffic = [{ pk: "car-1", averageSpeed: "20" }];
-      segmentStatus = dataManager.createSegmentStatus({ segmentTraffic });
+      segmentTraffic = new SegmentTraffic();
+      segmentTraffic.setVehicleConditions({ address: "V1", averageSpeed: 10 });
+      dataManager.segmentTraffic = segmentTraffic;
+      segmentStatus = dataManager.createSegmentStatus();
     });
 
     it("creates an instance of `SegmentStatus`", () => {

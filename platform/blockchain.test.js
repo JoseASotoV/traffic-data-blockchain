@@ -78,4 +78,36 @@ describe("Blockchain()", () => {
       });
     });
   });
+
+  describe("replaceChain()", () => {
+    describe("when the new chain is not longer", () => {
+      it("does not replace the chain", () => {
+        newChain.chain[0] = { new: "chain" };
+        blockchain.replaceChain(newChain.chain);
+        expect(blockchain.chain).toEqual(originalChain);
+      });
+    });
+
+    describe("when the new chain is longer", () => {
+      beforeEach(() => {
+        newChain.addBlock({ data: "Dwarves" });
+        newChain.addBlock({ data: "Orcs" });
+        newChain.addBlock({ data: "Elves" });
+      });
+
+      describe("and the chain is invalid", () => {
+        it("does not replace the chain", () => {
+          newChain.chain[2].hash = "invalid-hash";
+          blockchain.replaceChain(newChain.chain);
+          expect(blockchain.chain).toEqual(originalChain);
+        });
+      });
+      describe("and the chain is valid", () => {
+        it("replaces the chain", () => {
+          blockchain.replaceChain(newChain.chain);
+          expect(blockchain.chain).toEqual(newChain.chain);
+        });
+      });
+    });
+  });
 });
