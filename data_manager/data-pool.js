@@ -9,6 +9,10 @@ class DataPool {
     );
   }
 
+  setMap(dataPool) {
+    this.segmentStatusMap = dataPool;
+  }
+
   existingSegmentStatus({ segmentAddress }) {
     const segmentStatusEntries = Object.values(this.segmentStatusMap);
 

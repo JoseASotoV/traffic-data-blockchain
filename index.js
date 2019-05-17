@@ -5,7 +5,7 @@ const Blockchain = require("./platform/blockchain");
 const DataManager = require("./data_manager");
 const DataPool = require("./data_manager/data-pool");
 const DataMiner = require("./app/data-miner");
-const PubSub = require("./pubsub");
+const PubSub = require("./app/pubsub");
 const SegmentStatus = require("./data_manager/segment-status");
 
 const app = express();
@@ -74,7 +74,7 @@ app.post("/api/create-segment-status", (req, res) => {
   console.log("* segmentStatus: ", segmentStatus);
   dataPool.setSegmentStatus({ segmentStatus });
 
-  //pubsub.broadcastTransaction(transaction);
+  pubsub.broadcastSegmentStatus(segmentStatus);
 
   res.status(200).json({ type: "success", segmentStatus });
 });
@@ -112,7 +112,7 @@ app.post("/api/disconnect-vehicle", (req, res) => {
   res.status(200).json({ type: "success", segmentTraffic });
 });
 
-const syncChains = () => {
+const syncWithRootState = () => {
   request(
     { url: `${ROOT_NODE_ADDRESS}/api/blocks` },
     (error, response, body) => {
@@ -120,6 +120,17 @@ const syncChains = () => {
         const rootChain = JSON.parse(body);
         console.log("replace chain on a sync with", rootChain);
         blockchain.replaceChain(rootChain);
+      }
+    }
+  );
+
+  request(
+    { url: `${ROOT_NODE_ADDRESS}/api/data-pool-map` },
+    (error, response, body) => {
+      if (!error && response.statusCode === 200) {
+        const rootDataPoolMap = JSON.parse(body);
+        console.log("replace data pool map on a sync with", rootDataPoolMap);
+        dataPool.setMap(rootDataPoolMap);
       }
     }
   );
@@ -134,7 +145,7 @@ function listen() {
       dataManager.segmentId = `Street${PORT - 3000}`;
 
       if (PORT != DEFAULT_PORT) {
-        syncChains();
+        syncWithRootState();
       }
     })
     .on("error", err => {
