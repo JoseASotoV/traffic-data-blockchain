@@ -39,6 +39,7 @@ class SegmentStatus {
       senderDataManager,
       trafficStatus: segmentStatus.trafficStatus
     });
+    return segmentStatus;
   }
 
   static isValidSegmentStatus() {

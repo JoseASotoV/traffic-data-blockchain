@@ -16,29 +16,34 @@ describe("DataPool", () => {
 
   describe("setSegmentStatus()", () => {
     it("adds a Segment Status to the pool", () => {
-      dataPool.setSegmentStatus(segmentStatus);
+      dataPool.setSegmentStatus({ segmentStatus });
 
-      expect(dataPool.segmentStatusMap[segmentStatus.id]).toBe(segmentStatus);
+      expect(
+        JSON.stringify(dataPool.segmentStatusMap[segmentStatus.id])
+      ).toEqual(JSON.stringify(segmentStatus));
     });
   });
 
   describe("existingSegmentStatus()", () => {
     it("returns an existing SegmentStatus given a segment address", () => {
-      dataPool.setSegmentStatus(segmentStatus);
+      dataPool.setSegmentStatus({ segmentStatus });
       expect(
-        dataPool.existingSegmentStatus({
-          segmentAddress: senderDataManager.publicKey
-        })
-      ).toBe(segmentStatus);
+        JSON.stringify(
+          dataPool.existingSegmentStatus({
+            segmentAddress: senderDataManager.publicKey
+          })
+        )
+      ).toBe(JSON.stringify(segmentStatus));
     });
   });
 
   describe("getValidData", () => {
     it("returns valid data from the pool", () => {
-      dataPool.setSegmentStatus(segmentStatus);
+      dataPool.setSegmentStatus({ segmentStatus });
       validData = dataPool.getValidData();
-
-      expect(validData.includes(segmentStatus)).toBe(true);
+      expect(JSON.stringify(validData[0])).toEqual(
+        JSON.stringify(segmentStatus)
+      );
     });
   });
 

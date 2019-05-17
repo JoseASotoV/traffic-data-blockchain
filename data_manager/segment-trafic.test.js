@@ -21,15 +21,15 @@ describe("DataPool", () => {
   describe("disconnectVehicle()", () => {
     it("removes vehicle info when it exists", () => {
       segmentTraffic.setVehicleConditions(vehicleInfo);
-      segmentTraffic.disconnectVehicle(vehicleInfo.address);
-      expect(segmentTraffic.vehicleActivity.has(vehicleInfo.address)).toBe(
-        false
+      segmentTraffic.disconnectVehicle({ address: vehicleInfo.address });
+      expect(segmentTraffic.vehicleActivity[vehicleInfo.address]).toBe(
+        undefined
       );
     });
     it("does nothing when vehicle info does not exist", () => {
       segmentTraffic.disconnectVehicle(vehicleInfo.address);
-      expect(segmentTraffic.vehicleActivity.has(vehicleInfo.address)).toBe(
-        false
+      expect(segmentTraffic.vehicleActivity[vehicleInfo.address]).toBe(
+        undefined
       );
     });
   });

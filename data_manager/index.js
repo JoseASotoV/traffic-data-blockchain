@@ -18,7 +18,7 @@ class DataManager {
     const segmentStatus = new SegmentStatus({
       senderDataManager: this
     });
-    return JSON.parse(JSON.stringify(segmentStatus));
+    return segmentStatus;
   }
 }
 

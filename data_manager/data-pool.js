@@ -3,8 +3,10 @@ class DataPool {
     this.segmentStatusMap = {};
   }
 
-  setSegmentStatus(segmentStatus) {
-    this.segmentStatusMap[segmentStatus.id] = segmentStatus;
+  setSegmentStatus({ segmentStatus }) {
+    this.segmentStatusMap[segmentStatus.id] = JSON.parse(
+      JSON.stringify(segmentStatus)
+    );
   }
 
   existingSegmentStatus({ segmentAddress }) {

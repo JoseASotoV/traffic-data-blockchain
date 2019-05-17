@@ -71,8 +71,8 @@ app.post("/api/create-segment-status", (req, res) => {
   } catch (error) {
     return res.status(400).json({ type: "error", message: error.message });
   }
-
-  dataPool.setSegmentStatus(segmentStatus);
+  console.log("* segmentStatus: ", segmentStatus);
+  dataPool.setSegmentStatus({ segmentStatus });
 
   //pubsub.broadcastTransaction(transaction);
 

@@ -9,7 +9,7 @@ class SegmentTraffic {
   }
 
   disconnectVehicle({ address }) {
-    this.vehicleActivity.delete(address);
+    delete this.vehicleActivity[address];
   }
 
   clear() {

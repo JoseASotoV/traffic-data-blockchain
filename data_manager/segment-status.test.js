@@ -7,11 +7,11 @@ describe("SegmentStatus", () => {
   let senderDataManager, segmentTraffic;
 
   beforeEach(() => {
-    senderDataManager = new DataManager();
     segmentTraffic = new SegmentTraffic();
-    segmentStatus = new SegmentStatus({ senderDataManager, segmentTraffic });
-
     segmentTraffic.setVehicleConditions({ address: "V1", averageSpeed: 10 });
+    senderDataManager = new DataManager();
+    senderDataManager.segmentTraffic.traffic = segmentTraffic;
+    segmentStatus = new SegmentStatus({ senderDataManager });
   });
 
   it("has an id", () => {
@@ -31,7 +31,13 @@ describe("SegmentStatus", () => {
       );
     });
     it("has the records of the cars registered", () => {
-      expect(segmentStatus.trafficStatus.traffic).toEqual(segmentTraffic);
+      console.log(
+        "segmentStatus.trafficStatus.traffic :",
+        segmentStatus.trafficStatus.traffic
+      );
+      expect(segmentStatus.trafficStatus.traffic).toEqual(
+        senderDataManager.segmentTraffic
+      );
     });
   });
 
