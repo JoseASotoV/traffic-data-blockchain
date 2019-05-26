@@ -1,5 +1,6 @@
 const bodyParser = require("body-parser");
 const express = require("express");
+const cors = require("cors");
 const request = require("request");
 const Blockchain = require("./platform/blockchain");
 const DataManager = require("./data_manager");
@@ -12,12 +13,13 @@ const app = express();
 const blockchain = new Blockchain();
 const dataManager = new DataManager();
 const dataPool = new DataPool();
-const dataMiner = new DataMiner({ blockchain, dataPool, dataManager });
 const pubsub = new PubSub({ blockchain, dataPool });
+const dataMiner = new DataMiner({ blockchain, dataPool, dataManager, pubsub });
 
 const DEFAULT_PORT = 3001;
 const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
 
+app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/api/blocks", (req, res) => {
@@ -71,12 +73,21 @@ app.post("/api/create-segment-status", (req, res) => {
   } catch (error) {
     return res.status(400).json({ type: "error", message: error.message });
   }
-  console.log("* segmentStatus: ", segmentStatus);
-  dataPool.setSegmentStatus({ segmentStatus });
 
-  pubsub.broadcastSegmentStatus(segmentStatus);
+  if (
+    Object.keys(segmentStatus.trafficStatus.traffic.vehicleActivity).length > 0
+  ) {
+    dataPool.setSegmentStatus({ segmentStatus });
 
-  res.status(200).json({ type: "success", segmentStatus });
+    pubsub.broadcastSegmentStatus(segmentStatus);
+
+    res.status(200).json({ type: "success", segmentStatus });
+  } else {
+    res.status(200).json({
+      type: "success",
+      message: "There is no activity for this segment"
+    });
+  }
 });
 
 app.get("/api/data-manager-info", (req, res) => {
